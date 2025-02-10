@@ -4,25 +4,28 @@ Neovim plugin for extracting and visualizing CSS classes from any file type by p
 
 ## Problem
 
-When working with large React applications using CSS Modules and utility-first CSS frameworks:
+When developing applications with many CSS classes:
 
+- Copying and organizing styles from markup to CSS/SCSS files is time-consuming
+- Finding all class usages across different files is difficult
 - Class structures become complex and hard to track
-- Mixing CSS Modules with regular CSS classes creates cognitive overhead
-- Conditional class applications (via clsx/classnames) make it difficult to see the full styling structure
-- BEM methodology becomes harder to maintain without proper visualization
+- Mixing CSS Modules with regular CSS creates overhead
+- BEM methodology needs proper structure visualization
 
 ## Solution
 
-WonderStyler parses your React/TSX files and generates a clean, hierarchical view of all CSS classes, showing:
+WonderStyler helps you quickly copy styles from markup to your CSS/SCSS files by:
 
-- Native CSS classes with their modifiers and elements
-- CSS Module structures separated by module
-- BEM structure visualization with proper nesting
-- Support for conditional class applications
+- Extracting classes from any file type
+- Creating a clean, hierarchical structure ready for CSS/SCSS implementation
+- Organizing native CSS classes and CSS Modules separately
+- Supporting BEM methodology with proper nesting
+- Making conditional classes visible and organized
 
 ## Features
 
-- **Smart Parsing**: Handles both `className` and `class` attributes
+- **Universal Parsing**: Works with any file containing `class=""` or `className=""` attributes
+- **Ready-to-Use Structure**: Generate organized SCSS templates from your markup
 - **Multiple Syntax Support**:
   - Regular CSS classes
   - CSS Modules
@@ -57,14 +60,15 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ## Usage
 
-1. Open a React/TSX file
+1. Open any file with class/className attributes
 2. Run `:WonderStylerGenerate` or use `<leader>wg` to parse classes
 3. Run `:WonderStylerShow` or use `<leader>wl` to view the structure
 4. Press `q` or `<Esc>` to close the viewer
+5. Copy generated structure to your CSS/SCSS file
 
 ## Example
 
-Input TSX code:
+Input code:
 
 ```tsx
 export const NavigationMainLayout: FC<NavigationMainLayoutProps> = (props) => {
@@ -110,7 +114,7 @@ export const NavigationMainLayout: FC<NavigationMainLayoutProps> = (props) => {
 };
 ```
 
-Output SCSS structure:
+Generated SCSS structure ready for implementation:
 
 ```scss
 /* Native CSS */
