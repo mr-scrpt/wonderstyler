@@ -1,6 +1,6 @@
 # WonderStyler
 
-Neovim plugin for extracting and visualizing CSS classes from any file type by parsing class="" and className="" attributes, with support for both regular CSS and CSS Modules syntax.
+Neovim plugin for extracting and visualizing CSS classes from any file type by parsing `class=""`` and`className="" or className={}` attributes, with support for both regular CSS and CSS Modules syntax.
 
 ## Problem
 
