@@ -97,33 +97,37 @@ end
 -- Основная функция трансформации
 function M.transform(classes)
 	local output_lines = {}
+	local processed_sections = {} -- Для предотвращения дублирования секций
 
-	-- Обработка нативных классов
-	if #classes.native > 0 then
-		table.insert(output_lines, "/* Native CSS */")
-		local native_groups, native_order = group_classes(classes.native)
-		for _, base in ipairs(native_order) do
-			local group = native_groups[base]
-			local lines = format_group(".", group)
-			for _, l in ipairs(lines) do
-				table.insert(output_lines, l)
-			end
-			table.insert(output_lines, "")
-		end
-	end
-
-	-- Обработка модулей
-	for mod, class_list in pairs(classes.modules or {}) do
-		if #class_list > 0 then
-			table.insert(output_lines, "/* Module: " .. mod .. " */")
-			local mod_groups, mod_order = group_classes(class_list)
-			for _, base in ipairs(mod_order) do
-				local group = mod_groups[base]
-				local lines = format_group(".", group)
-				for _, l in ipairs(lines) do
-					table.insert(output_lines, l)
+	for _, section in ipairs(classes.sections_order) do
+		if section.type == "native" and not processed_sections["native"] then
+			processed_sections["native"] = true
+			if #classes.native > 0 then
+				table.insert(output_lines, "/* Native CSS */")
+				local native_groups, native_order = group_classes(classes.native)
+				for _, base in ipairs(native_order) do
+					local group = native_groups[base]
+					local lines = format_group(".", group)
+					for _, l in ipairs(lines) do
+						table.insert(output_lines, l)
+					end
+					table.insert(output_lines, "")
 				end
-				table.insert(output_lines, "")
+			end
+		elseif section.type == "module" and not processed_sections[section.name] then
+			processed_sections[section.name] = true
+			local mod_classes = classes.modules[section.name]
+			if mod_classes and #mod_classes.order > 0 then
+				table.insert(output_lines, "/* Module: " .. section.name .. " */")
+				local mod_groups, mod_order = group_classes(mod_classes.order)
+				for _, base in ipairs(mod_order) do
+					local group = mod_groups[base]
+					local lines = format_group(".", group)
+					for _, l in ipairs(lines) do
+						table.insert(output_lines, l)
+					end
+					table.insert(output_lines, "")
+				end
 			end
 		end
 	end

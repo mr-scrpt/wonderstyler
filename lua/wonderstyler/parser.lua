@@ -72,10 +72,12 @@ end
 
 -- Основная функция парсинга
 function M.parse_classes(lines)
-	local native_order = {}
-	local native_set = {}
-	local modules = {}
-	local module_normalization = {}
+	local native_order = {} -- Порядок нативных классов
+	local native_set = {} -- Множество для проверки уникальности
+	local modules = {} -- Модули с их классами
+	local sections_order = {} -- Порядок секций (модули и нативные классы)
+	local current_section = nil -- Текущая секция для отслеживания смены
+
 	local content = table.concat(lines, " ")
 
 	local pos = 1
@@ -94,16 +96,63 @@ function M.parse_classes(lines)
 			local closing = content:find(quote, e + 2, true)
 			if closing then
 				local value = content:sub(e + 2, closing - 1)
-				process_literal(value, native_order, native_set, modules, module_normalization)
+				for token in string.gmatch(value, "[%w_%-]+") do
+					local mod, class_name = string.match(token, "^([%w_]+)%.([%w_%-]+)$")
+					if mod and class_name then
+						modules[mod] = modules[mod] or { order = {}, set = {} }
+						if not modules[mod].set[class_name] then
+							table.insert(modules[mod].order, class_name)
+							modules[mod].set[class_name] = true
+						end
+						if current_section ~= mod then
+							table.insert(sections_order, { type = "module", name = mod })
+							current_section = mod
+						end
+					else
+						if not native_set[token] then
+							table.insert(native_order, token)
+							native_set[token] = true
+						end
+						if current_section ~= "native" then
+							table.insert(sections_order, { type = "native" })
+							current_section = "native"
+						end
+					end
+				end
 				pos = closing + 1
 			else
 				break
 			end
 		elseif next_char == "{" then
-			local value, newpos = extract_braced(content, e + 1)
+			-- Обработка выражений вроде { [sList.list_l]: listSize == "L" }
+			local value, newpos = extract_braced(content, e + 1) -- Предполагаем функцию extract_braced
 			if value then
 				local inner = value:sub(2, -2)
-				process_expr(inner, native_order, native_set, modules, module_normalization)
+				for literal in string.gmatch(inner, "[\"'](.-)[\"']") do
+					for token in string.gmatch(literal, "[%w_%-]+") do
+						local mod, class_name = string.match(token, "^([%w_]+)%.([%w_%-]+)$")
+						if mod and class_name then
+							modules[mod] = modules[mod] or { order = {}, set = {} }
+							if not modules[mod].set[class_name] then
+								table.insert(modules[mod].order, class_name)
+								modules[mod].set[class_name] = true
+							end
+							if current_section ~= mod then
+								table.insert(sections_order, { type = "module", name = mod })
+								current_section = mod
+							end
+						else
+							if not native_set[token] then
+								table.insert(native_order, token)
+								native_set[token] = true
+							end
+							if current_section ~= "native" then
+								table.insert(sections_order, { type = "native" })
+								current_section = "native"
+							end
+						end
+					end
+				end
 				pos = newpos + 1
 			else
 				break
@@ -113,12 +162,11 @@ function M.parse_classes(lines)
 		end
 	end
 
-	local result = { native = native_order, modules = {} }
-	for mod, data in pairs(modules) do
-		result.modules[mod] = data.order
-	end
-
-	return result
+	return {
+		native = native_order,
+		modules = modules,
+		sections_order = sections_order,
+	}
 end
 
 return M
